@@ -16,7 +16,7 @@ export default function Resources({ options }) {
   return (
     <Container options={options}>
       <Raw>
-        <div className="flex flex-row self-center flex-wrap justify-between">
+        <div className="flex flex-row self-center flex-wrap justify-between gap-x-4 divide-x divide-theme-300/30 items-center">
           {options.cpu && <Cpu expanded={expanded} refresh={refresh} />}
           {options.memory && <Memory expanded={expanded} refresh={refresh} />}
           {Array.isArray(options.disk)

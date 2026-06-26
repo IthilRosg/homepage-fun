@@ -16,7 +16,7 @@ export default function Resource({
 
   return (
     <div
-      className={`flex-none flex flex-row items-center mr-3 py-1.5 information-widget-resource ${additionalClassNames}`}
+      className={`flex-none flex flex-row items-center px-4 first:pl-0 last:pr-0 py-1.5 information-widget-resource ${additionalClassNames}`}
     >
       <Icon className="text-theme-800 dark:text-theme-200 w-5 h-5 resource-icon" />
       <div

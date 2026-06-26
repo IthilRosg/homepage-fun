@@ -14,6 +14,9 @@ export default function Network({ options, refresh = 1500 }) {
     refreshInterval: refresh,
   });
 
+  const { data: trafficData } = useSWR("/api/traffic", { refreshInterval: 60000 });
+
+
   if (error || data?.error) {
     return <Error />;
   }
@@ -32,6 +35,9 @@ export default function Network({ options, refresh = 1500 }) {
     );
   }
 
+  const homeTraffic = trafficData && trafficData["Home Server"] ? trafficData["Home Server"].split(" | ") : null;
+  const monthTraffic = homeTraffic ? homeTraffic.find(t => t.startsWith("Month:")) : null;
+
   return (
     <Resource
       icon={FaNetworkWired}
@@ -42,6 +48,12 @@ export default function Network({ options, refresh = 1500 }) {
       expanded={options.expanded}
       wide
       percentage={(100 * data.network.rx_sec) / (data.network.rx_sec + data.network.tx_sec)}
-    />
+    >
+      {monthTraffic && (
+        <div className="text-theme-500 dark:text-theme-400 text-[10px] mt-1 font-medium tracking-wide">
+          {monthTraffic.replace("Month:", "Месяц:")}
+        </div>
+      )}
+    </Resource>
   );
 }
