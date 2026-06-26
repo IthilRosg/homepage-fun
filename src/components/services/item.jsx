@@ -14,6 +14,7 @@ import ProxmoxStatus from "./proxmox-status";
 import SiteMonitor from "./site-monitor";
 import Status from "./status";
 import Widget from "./widget";
+import SSHTerminal from "./ssh-terminal";
 
 export default function Item({ service, groupName, useEqualHeights }) {
   const hasLink = service.href && service.href !== "#";
@@ -26,6 +27,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [logsText, setLogsText] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
+  const [showSSHModal, setShowSSHModal] = useState(false);
 
   const statusKey = service.container ? `/api/docker/status/${service.container}/${service.server || ""}` : null;
   const { data: statusData } = useSWR(statusKey);
@@ -140,12 +142,12 @@ export default function Item({ service, groupName, useEqualHeights }) {
             </div>
           )}
 
-          {service.container && (
+          {(service.container || service.os) && (
             <Menu as="div" className="relative inline-block text-left z-20">
               <div>
                 <Menu.Button className="shrink-0 flex items-center justify-center cursor-pointer service-tag service-container-stats focus:outline-hidden">
-                  <Status service={service} style={statusStyle} />
-                  <span className="sr-only">Open container actions</span>
+                  {service.container ? <Status service={service} style={statusStyle} /> : <span className="text-xs font-bold text-theme-400 hover:text-theme-200">⠇</span>}
+                  <span className="sr-only">Open actions</span>
                 </Menu.Button>
               </div>
               <Transition
@@ -159,7 +161,8 @@ export default function Item({ service, groupName, useEqualHeights }) {
               >
                 <Menu.Items className="absolute right-0 mt-1 w-44 origin-top-right rounded-md bg-theme-900 border border-theme-300/20 shadow-2xl focus:outline-hidden text-theme-200 text-xs z-50 overflow-hidden">
                   <div className="py-1">
-                    <Menu.Item>
+                    {service.container && (
+                      <Menu.Item>
                       {({ active }) => (
                         <button
                           onClick={() => (statsOpen ? closeStats() : setStatsOpen(true))}
@@ -227,6 +230,54 @@ export default function Item({ service, groupName, useEqualHeights }) {
                         </button>
                       )}
                     </Menu.Item>
+                    )}
+                    {service.os === "linux" && (
+                      <Menu.Item>
+                        {({ active }) => (
+                          <button
+                            onClick={() => setShowSSHModal(true)}
+                            className={classNames(
+                              active ? "bg-purple-500/20 text-purple-300" : "text-purple-400",
+                              "group flex w-full items-center px-3 py-2 text-left"
+                            )}
+                          >
+                            🖥 SSH Console
+                          </button>
+                        )}
+                      </Menu.Item>
+                    )}
+                    {service.os === "windows" && (
+                      <>
+                        {service.rdp && (
+                          <Menu.Item>
+                            {({ active }) => (
+                              <button
+                                onClick={() => alert("RDP Viewer coming soon")}
+                                className={classNames(
+                                  active ? "bg-sky-500/20 text-sky-300" : "text-sky-400",
+                                  "group flex w-full items-center px-3 py-2 text-left"
+                                )}
+                              >
+                                🖥 RDP Desktop
+                              </button>
+                            )}
+                          </Menu.Item>
+                        )}
+                        <Menu.Item>
+                          {({ active }) => (
+                            <button
+                              onClick={() => setShowSSHModal(true)}
+                              className={classNames(
+                                active ? "bg-purple-500/20 text-purple-300" : "text-purple-400",
+                                "group flex w-full items-center px-3 py-2 text-left"
+                              )}
+                            >
+                              ⌨ PowerShell (SSH)
+                            </button>
+                          )}
+                        </Menu.Item>
+                      </>
+                    )}
                   </div>
                 </Menu.Items>
               </Transition>
@@ -362,6 +413,15 @@ export default function Item({ service, groupName, useEqualHeights }) {
             </pre>
           </div>
         </div>
+      )}
+
+      {showSSHModal && (
+        <SSHTerminal
+          host={service.ping || service.href?.replace(/^https?:\/\//, '').split('/')[0].split(':')[0]}
+          username={service.ssh_user}
+          password={service.ssh_pass}
+          onClose={() => setShowSSHModal(false)}
+        />
       )}
     </li>
   );
