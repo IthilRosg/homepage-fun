@@ -164,6 +164,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
                 <Menu.Items className="absolute right-0 mt-1 w-44 origin-top-right rounded-md bg-theme-900 border border-theme-300/20 shadow-2xl focus:outline-hidden text-theme-200 text-xs z-50 overflow-hidden">
                   <div className="py-1">
                     {service.container && (
+                      <>
                       <Menu.Item>
                       {({ active }) => (
                         <button
@@ -232,6 +233,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
                         </button>
                       )}
                     </Menu.Item>
+                      </>
                     )}
                     {service.os === "linux" && (
                       <Menu.Item>
