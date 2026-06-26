@@ -15,6 +15,7 @@ import SiteMonitor from "./site-monitor";
 import Status from "./status";
 import Widget from "./widget";
 import SSHTerminal from "./ssh-terminal";
+import RDPViewer from "./rdp-viewer";
 
 export default function Item({ service, groupName, useEqualHeights }) {
   const hasLink = service.href && service.href !== "#";
@@ -28,6 +29,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
   const [logsText, setLogsText] = useState("");
   const [confirmAction, setConfirmAction] = useState(null);
   const [showSSHModal, setShowSSHModal] = useState(false);
+  const [showRDPModal, setShowRDPModal] = useState(false);
 
   const statusKey = service.container ? `/api/docker/status/${service.container}/${service.server || ""}` : null;
   const { data: statusData } = useSWR(statusKey);
@@ -252,7 +254,7 @@ export default function Item({ service, groupName, useEqualHeights }) {
                           <Menu.Item>
                             {({ active }) => (
                               <button
-                                onClick={() => alert("RDP Viewer coming soon")}
+                                onClick={() => setShowRDPModal(true)}
                                 className={classNames(
                                   active ? "bg-sky-500/20 text-sky-300" : "text-sky-400",
                                   "group flex w-full items-center px-3 py-2 text-left"
@@ -359,6 +361,70 @@ export default function Item({ service, groupName, useEqualHeights }) {
         <Widget widget={widget} service={service} key={widget.index} />
       ))}
 
+      {/* Quick Action Buttons */}
+      {(service.container || service.os) && (
+        <div className="mt-3 pt-3 border-t border-theme-300/10 flex flex-wrap gap-2 items-center" onClick={(e) => e.preventDefault()}>
+          <span className="text-[10px] text-theme-500 uppercase tracking-widest font-bold mr-1">Manage:</span>
+          {service.container && (
+            <>
+              {isRunning ? (
+                <button
+                  onClick={() => setConfirmAction("stop")}
+                  className="px-2 py-1 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] uppercase font-bold tracking-wider rounded transition-colors"
+                >
+                  Stop
+                </button>
+              ) : (
+                <button
+                  onClick={() => setConfirmAction("start")}
+                  className="px-2 py-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-[10px] uppercase font-bold tracking-wider rounded transition-colors"
+                >
+                  Start
+                </button>
+              )}
+              <button
+                onClick={() => setConfirmAction("restart")}
+                className="px-2 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-[10px] uppercase font-bold tracking-wider rounded transition-colors"
+              >
+                Restart
+              </button>
+              <button
+                onClick={() => fetchLogs()}
+                className="px-2 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 text-[10px] uppercase font-bold tracking-wider rounded transition-colors"
+              >
+                Logs
+              </button>
+            </>
+          )}
+          {service.os === "linux" && (
+            <button
+              onClick={() => setShowSSHModal(true)}
+              className="px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-[10px] uppercase font-bold tracking-wider rounded transition-colors"
+            >
+              SSH
+            </button>
+          )}
+          {service.os === "windows" && (
+            <>
+              {service.rdp && (
+                <button
+                  onClick={() => setShowRDPModal(true)}
+                  className="px-2 py-1 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 text-[10px] uppercase font-bold tracking-wider rounded transition-colors"
+                >
+                  RDP
+                </button>
+              )}
+              <button
+                onClick={() => setShowSSHModal(true)}
+                className="px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-[10px] uppercase font-bold tracking-wider rounded transition-colors"
+              >
+                PowerShell
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
 
       {confirmAction && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-[60] flex items-center justify-center p-4">
@@ -421,6 +487,15 @@ export default function Item({ service, groupName, useEqualHeights }) {
           username={service.ssh_user}
           password={service.ssh_pass}
           onClose={() => setShowSSHModal(false)}
+        />
+      )}
+
+      {showRDPModal && (
+        <RDPViewer
+          host={service.ping || service.href?.replace(/^https?:\/\//, '').split('/')[0].split(':')[0]}
+          username={service.ssh_user}
+          password={service.ssh_pass}
+          onClose={() => setShowRDPModal(false)}
         />
       )}
     </li>
